@@ -77,7 +77,7 @@ func (r *possesionsWriter) Write(b []byte) (int, error) {
 			return 0, err
 		}
 	}
-	return r.Write(b)
+	return r.underlying.Write(b)
 }
 
 // UnderlyingResponseWriter for this instance
