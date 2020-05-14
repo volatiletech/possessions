@@ -37,6 +37,10 @@ func (s StorageOverseer) ReadState(r *http.Request) (Session, error) {
 		return nil, err
 	}
 
+	if !validKey(id) {
+		return nil, errNoSession{}
+	}
+
 	encodedSession, err := s.Storer.Get(r.Context(), id)
 	if err != nil {
 		return nil, err
@@ -53,27 +57,7 @@ func (s StorageOverseer) ReadState(r *http.Request) (Session, error) {
 	}, nil
 }
 
-// WriteState to the response
-func (s StorageOverseer) WriteState(ctx context.Context, w http.ResponseWriter, sess Session, evs []Event) error {
-	var sessionObj session
-	isNew := false
-	if sess != nil {
-		sessionObj = sess.(session)
-	} else {
-		isNew = true
-		uuidID, err := uuid.NewV4()
-		if err != nil {
-			return errors.Wrap(err, "failed to create uuid for session")
-		}
-
-		sessionObj = session{
-			ID:     uuidID.String(),
-			Values: make(map[string]string),
-		}
-	}
-
-	doRefresh := false
-
+func applyEvents(sessionObj session, evs []Event) (doRefresh bool) {
 	for _, ev := range evs {
 		switch ev.Kind {
 		case EventSet:
@@ -97,9 +81,38 @@ func (s StorageOverseer) WriteState(ctx context.Context, w http.ResponseWriter, 
 				delete(sessionObj.Values, k)
 			}
 		case EventRefresh:
-			doRefresh = !isNew
+			doRefresh = true
 		}
 	}
+
+	return doRefresh
+}
+
+// WriteState to the response
+func (s StorageOverseer) WriteState(ctx context.Context, w http.ResponseWriter, sess Session, evs []Event) error {
+	if len(evs) == 1 && evs[0].Kind == EventDelClientState {
+		s.options.deleteCookie(w)
+		return nil
+	}
+
+	var sessionObj session
+	isNew := false
+	if sess != nil {
+		sessionObj = sess.(session)
+	} else {
+		isNew = true
+		uuidID, err := uuid.NewV4()
+		if err != nil {
+			return errors.Wrap(err, "failed to create uuid for session")
+		}
+
+		sessionObj = session{
+			ID:     uuidID.String(),
+			Values: make(map[string]string),
+		}
+	}
+
+	doRefresh := applyEvents(sessionObj, evs) && !isNew
 
 	encodedValues, err := json.Marshal(sessionObj.Values)
 	if err != nil {

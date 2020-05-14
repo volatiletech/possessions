@@ -51,6 +51,8 @@ const (
 	EventDelAll
 	// EventRefresh should refresh the TTL if any on the session
 	EventRefresh
+	// Deletes the client state
+	EventDelClientState
 )
 
 // Event represents an operation on a session
@@ -68,7 +70,7 @@ type Overseer interface {
 	ReadState(*http.Request) (Session, error)
 	// WriteState can sometimes be called with a nil ClientState in the event
 	// that no ClientState was read in from LoadClientState
-	WriteState(http.ResponseWriter, Session, []Event) error
+	WriteState(context.Context, http.ResponseWriter, Session, []Event) error
 }
 
 // timer interface is used to mock the test harness for disk and memory storers
@@ -166,14 +168,14 @@ func validKey(key string) bool {
 }
 
 // Get a session string value
-func Get(r *http.Request, key string) (string, bool) {
-	return get(r, key)
+func Get(ctx context.Context, key string) (string, bool) {
+	return get(ctx, key)
 }
 
 // GetObj a session json encoded string and decode it into obj. Use the
 // IsNoMapKeyError to determine if the value was found or not.
-func GetObj(r *http.Request, key string, obj interface{}) error {
-	encodedString, ok := get(r, key)
+func GetObj(ctx context.Context, key string, obj interface{}) error {
+	encodedString, ok := get(ctx, key)
 	if !ok {
 		return errNoMapKey{}
 	}
@@ -202,8 +204,8 @@ func SetObj(w http.ResponseWriter, key string, obj interface{}) error {
 	return nil
 }
 
-func get(r *http.Request, key string) (string, bool) {
-	cached := r.Context().Value(CTXKeyPossessions{})
+func get(ctx context.Context, key string) (string, bool) {
+	cached := ctx.Value(CTXKeyPossessions{})
 	if cached == nil {
 		return "", false
 	}
@@ -271,9 +273,9 @@ func AddFlashObj(w http.ResponseWriter, key string, obj interface{}) error {
 
 // GetFlash reads a flash message from the request and deletes it using the
 // responsewriter.
-func GetFlash(w http.ResponseWriter, r *http.Request, key string) (string, bool) {
+func GetFlash(w http.ResponseWriter, ctx context.Context, key string) (string, bool) {
 	key = getFlashKey(key)
-	flash, ok := Get(r, key)
+	flash, ok := Get(ctx, key)
 	if !ok {
 		return "", false
 	}
@@ -285,9 +287,9 @@ func GetFlash(w http.ResponseWriter, r *http.Request, key string) (string, bool)
 // GetFlashObj reads a json-encoded flash message from the session and
 // unmarshals it into obj. Use IsNoMapKeyError to determine if the value was
 // found or not.
-func GetFlashObj(w http.ResponseWriter, r *http.Request, key string, obj interface{}) error {
+func GetFlashObj(w http.ResponseWriter, ctx context.Context, key string, obj interface{}) error {
 	key = getFlashKey(key)
-	flash, ok := Get(r, key)
+	flash, ok := Get(ctx, key)
 	if !ok {
 		return errNoMapKey{}
 	}

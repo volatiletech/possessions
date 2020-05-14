@@ -86,7 +86,7 @@ func (r *possesionsWriter) UnderlyingResponseWriter() http.ResponseWriter {
 }
 
 func (r *possesionsWriter) writeClientState(ctx context.Context) error {
-	if err := r.overseer.WriteState(r.underlying, r.session, r.events); err != nil {
+	if err := r.overseer.WriteState(ctx, r.underlying, r.session, r.events); err != nil {
 		return err
 	}
 	r.hasWritten = true
@@ -123,12 +123,19 @@ func (o OverseeingMiddleware) Wrap(h http.Handler) http.Handler {
 // ServeHTTP implements http.Handler
 func (o oversight) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	session, err := o.overseer.ReadState(r)
-	if err != nil {
+	noSession := false
+	if IsNoSessionError(err) {
+		session = nil
+		noSession = true
+	} else if err != nil {
 		panic(errors.Wrap(err, "failed to read session state"))
 	}
 
 	ctx := context.WithValue(r.Context(), CTXKeyPossessions{}, session)
-	w = newResponseWriter(ctx, w, o.overseer)
+	pw := newResponseWriter(ctx, w, o.overseer)
+	if noSession {
+		pw.events = append(pw.events, Event{Kind: EventDelClientState})
+	}
 	r = r.WithContext(ctx)
-	o.handler.ServeHTTP(w, r)
+	o.handler.ServeHTTP(pw, r)
 }
