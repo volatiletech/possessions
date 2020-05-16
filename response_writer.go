@@ -36,12 +36,17 @@ type possesionsWriter struct {
 }
 
 func newResponseWriter(ctx context.Context, w http.ResponseWriter, overseer Overseer) *possesionsWriter {
-	return &possesionsWriter{
+	pw := possesionsWriter{
 		underlying: w,
 		overseer:   overseer,
 		ctx:        ctx,
-		session:    ctx.Value(CTXKeyPossessions{}).(Session),
 	}
+	sess, ok := ctx.Value(CTXKeyPossessions{}).(Session)
+	if ok {
+		pw.session = sess
+	}
+
+	return &pw
 }
 
 // Header retrieves the underlying headers
