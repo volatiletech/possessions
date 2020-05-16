@@ -40,6 +40,7 @@ func newResponseWriter(ctx context.Context, w http.ResponseWriter, overseer Over
 		underlying: w,
 		overseer:   overseer,
 		ctx:        ctx,
+		session:    ctx.Value(CTXKeyPossessions{}).(Session),
 	}
 }
 
