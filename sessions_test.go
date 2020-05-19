@@ -8,7 +8,7 @@ import (
 func TestSetAndSetObjAndDelAndDelAllAndRefreshAndFlashAndFlashObj(t *testing.T) {
 	t.Parallel()
 
-	w := newResponseWriter(context.Background(), nil, nil)
+	w := newResponseWriter(context.Background(), nil, nil, nil)
 
 	Set(w, "key1", "value1")
 	SetObj(w, "key2", "value2")
@@ -75,7 +75,7 @@ func TestGetAndGetObjAndGetFlashAndGetFlashObj(t *testing.T) {
 		t.Error("expected value to be \"value2\", got:", val2)
 	}
 
-	w := newResponseWriter(context.Background(), nil, nil)
+	w := newResponseWriter(context.Background(), nil, nil, nil)
 
 	val, ok = GetFlash(w, ctx, "key3")
 	if val != "value3" || !ok {

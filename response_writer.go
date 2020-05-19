@@ -35,12 +35,12 @@ type possesionsWriter struct {
 	events     []Event
 }
 
-func newResponseWriter(ctx context.Context, w http.ResponseWriter, overseer Overseer) *possesionsWriter {
+func newResponseWriter(ctx context.Context, w http.ResponseWriter, overseer Overseer, session Session) *possesionsWriter {
 	return &possesionsWriter{
+		ctx:        ctx,
 		underlying: w,
 		overseer:   overseer,
-		ctx:        ctx,
-		session:    ctx.Value(CTXKeyPossessions{}).(Session),
+		session:    session,
 	}
 }
 
@@ -133,7 +133,7 @@ func (o oversight) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.WithValue(r.Context(), CTXKeyPossessions{}, session)
-	pw := newResponseWriter(ctx, w, o.overseer)
+	pw := newResponseWriter(ctx, w, o.overseer, session)
 	if noSession {
 		pw.events = append(pw.events, Event{Kind: EventDelClientState})
 	}

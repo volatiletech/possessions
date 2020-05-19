@@ -95,7 +95,7 @@ func TestWriteState(t *testing.T) {
 	}
 	s := NewStorageOverseer(NewCookieOptions(), m)
 	rec := httptest.NewRecorder()
-	w := newResponseWriter(r.Context(), rec, s)
+	w := newResponseWriter(r.Context(), rec, s, nil)
 
 	ev := Event{Kind: EventSet, Key: "key", Val: "value"}
 

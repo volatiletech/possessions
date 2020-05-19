@@ -10,7 +10,7 @@ import (
 func TestRefreshMiddleware(t *testing.T) {
 	t.Parallel()
 
-	w := newResponseWriter(context.Background(), httptest.NewRecorder(), nil)
+	w := newResponseWriter(context.Background(), httptest.NewRecorder(), nil, nil)
 	r := httptest.NewRequest("GET", "/", nil)
 
 	called := false
