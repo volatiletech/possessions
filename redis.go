@@ -48,6 +48,17 @@ func NewRedisStorer(opts redis.Options, maxAge time.Duration) (*RedisStorer, err
 	return r, nil
 }
 
+// NewRedisStorerClient behaves the same as NewRedisStorer but does not create
+// a new connection pool.
+func NewRedisStorerClient(client *redis.Client, maxAge time.Duration) (*RedisStorer, error) {
+	r := &RedisStorer{
+		maxAge: maxAge,
+		client: client,
+	}
+
+	return r, nil
+}
+
 // All keys in the redis store
 func (r *RedisStorer) All(ctx context.Context) ([]string, error) {
 	var sessions []string
