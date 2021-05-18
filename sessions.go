@@ -260,21 +260,18 @@ func Refresh(w http.ResponseWriter) {
 // AddFlash adds a flash message to the session. Typically read and removed
 // on the next request.
 func AddFlash(w http.ResponseWriter, key string, value string) {
-	key = getFlashKey(key)
 	Set(w, key, value)
 }
 
 // AddFlashObj adds a flash message to the session using an object that's
 // marshalled into JSON
 func AddFlashObj(w http.ResponseWriter, key string, obj interface{}) error {
-	key = getFlashKey(key)
 	return SetObj(w, key, obj)
 }
 
 // GetFlash reads a flash message from the request and deletes it using the
 // responsewriter.
 func GetFlash(w http.ResponseWriter, ctx context.Context, key string) (string, bool) {
-	key = getFlashKey(key)
 	flash, ok := Get(ctx, key)
 	if !ok {
 		return "", false
@@ -288,7 +285,6 @@ func GetFlash(w http.ResponseWriter, ctx context.Context, key string) (string, b
 // unmarshals it into obj. Use IsNoMapKeyError to determine if the value was
 // found or not.
 func GetFlashObj(w http.ResponseWriter, ctx context.Context, key string, obj interface{}) error {
-	key = getFlashKey(key)
 	flash, ok := Get(ctx, key)
 	if !ok {
 		return errNoMapKey{}
@@ -301,10 +297,6 @@ func GetFlashObj(w http.ResponseWriter, ctx context.Context, key string, obj int
 	}
 
 	return nil
-}
-
-func getFlashKey(key string) string {
-	return "flash_" + key
 }
 
 func getResponseWriter(w http.ResponseWriter) *possesionsWriter {

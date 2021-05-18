@@ -12,8 +12,8 @@ func TestSetAndSetObjAndDelAndDelAllAndRefreshAndFlashAndFlashObj(t *testing.T) 
 
 	Set(w, "key1", "value1")
 	SetObj(w, "key2", "value2")
-	AddFlash(w, "key3", "value3")
-	AddFlashObj(w, "key4", "value4")
+	AddFlash(w, "flash_key3", "value3")
+	AddFlashObj(w, "flash_key4", "value4")
 	Del(w, "key5")
 	DelAll(w, []string{"key6"})
 	Refresh(w)
@@ -77,13 +77,13 @@ func TestGetAndGetObjAndGetFlashAndGetFlashObj(t *testing.T) {
 
 	w := newResponseWriter(context.Background(), nil, nil, nil)
 
-	val, ok = GetFlash(w, ctx, "key3")
+	val, ok = GetFlash(w, ctx, "flash_key3")
 	if val != "value3" || !ok {
 		t.Error("expected value to be value3, got:", val)
 	}
 
 	var val4 string
-	err = GetFlashObj(w, ctx, "key4", &val4)
+	err = GetFlashObj(w, ctx, "flash_key4", &val4)
 	if err != nil {
 		t.Error("unable to get key4 flash object using GetFlashObj")
 	}
