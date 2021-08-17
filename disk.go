@@ -99,7 +99,7 @@ func (d *DiskStorer) Get(ctx context.Context, key string) (value string, err err
 
 	_, err = os.Stat(filePath)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to stat session file: %s", filePath)
+		return "", errNoSession{}
 	}
 
 	contents, err := ioutil.ReadFile(filePath)
